@@ -79,7 +79,12 @@ void port_send_message(Context *ctx, term pid, term msg)
 {
     int local_process_id = term_to_local_process_id(pid);
     Context *target = globalcontext_get_process(ctx->global, local_process_id);
-    mailbox_send(target, msg);
+    if (IS_NULL_PTR(target)) {
+        term_display(stdout, pid, ctx);
+        fprintf(stderr, "Unable to send message to nonexistent pid.\n");
+    } else {
+        mailbox_send(target, msg);
+    }
 }
 
 void port_ensure_available(Context *ctx, size_t size)

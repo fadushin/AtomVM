@@ -9,7 +9,10 @@ include(BuildErlang)
 set(ERLANG_MODULES
     atomvm
     console
+    disterld
+    epmd
     esp
+    gen_tcp_server
     gpio
     i2c
     http_server
@@ -17,6 +20,7 @@ set(ERLANG_MODULES
     ledc
     logger
     network_fsm
+    rex
     spi
     timer_manager
     timestamp_util

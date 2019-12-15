@@ -41,7 +41,7 @@
 
 -export([connect/3, send/2, recv/2, recv/3, close/1, listen/2, accept/1, accept/2]).
 
--define(DEFAULT_PARAMS, [{active, true}, {buffer, 128}, binary, {timeout, infinity}]).
+-define(DEFAULT_PARAMS, [{active, true}, {buffer, 512}, {binary, true}, {timeout, infinity}]).
 
 %%-----------------------------------------------------------------------------
 %% @param   Address the address to which to connect
@@ -262,6 +262,7 @@ merge(Config, [H | T], Accum) ->
     end.
 
 %% @private
+normalize_address(localhost) -> "127.0.0.1";
 normalize_address(loopback) -> "127.0.0.1";
 normalize_address(Address) when is_list(Address) -> Address;
 normalize_address({A,B,C,D}) when is_integer(A) and is_integer(B) and is_integer(C) and is_integer(D) ->

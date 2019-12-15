@@ -21,3 +21,7 @@
 -define(LOG_WARNING(Format, Args),   logger:log({?MODULE, ?FUNCTION_NAME, ?FUNCTION_ARITY, ?LINE}, warning,  {Format, Args})).
 -define(LOG_ERROR(Format, Args),     logger:log({?MODULE, ?FUNCTION_NAME, ?FUNCTION_ARITY, ?LINE}, error,    {Format, Args})).
 -define(LOG_DEBUG(Format, Args),     logger:log({?MODULE, ?FUNCTION_NAME, ?FUNCTION_ARITY, ?LINE}, debug,    {Format, Args})).
+
+% -define(LOG_INFO(Format, Args),      avm_io:format(Format ++ "~n", Args)).
+% -define(LOG_WARNING(Format, Args),   avm_io:format(Format ++ "~n", Args)).
+% -define(LOG_ERROR(Format, Args),     avm_io:format(Format ++ "~n", Args)).

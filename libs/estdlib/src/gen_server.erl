@@ -246,7 +246,7 @@ call(Name, Request, Timeout) when is_atom(Name) ->
     end;
 call(Pid, Request, Timeout) when is_pid(Pid) ->
     Ref = erlang:make_ref(),
-    call_internal(Pid, Ref, {'$call', self(), Ref, Request}, Timeout).
+    call_internal(Pid, Ref, {'$gen_call', {self(), Ref}, Request}, Timeout).
 
 %%-----------------------------------------------------------------------------
 %% @param   ServerRef a reference to the gen_server acquired via start
@@ -267,7 +267,7 @@ cast(Name, Request) when is_atom(Name) ->
             cast(Pid, Request)
     end;
 cast(Pid, Request) when is_pid(Pid) ->
-    Pid ! {'$cast', Request},
+    Pid ! {'$gen_cast', Request},
     ok.
 
 %%-----------------------------------------------------------------------------
@@ -304,8 +304,8 @@ call_internal(Pid, Ref, Msg, Timeout) ->
 %% @private
 loop(#state{mod=Mod, mod_state=ModState} = State) ->
     receive
-        {'$call', Pid, Ref, Request} ->
-            case Mod:handle_call(Request, {Pid, Ref}, ModState) of
+        {'$gen_call', {Pid, Ref} = From, Request} ->
+            case Mod:handle_call(Request, From, ModState) of
                 {reply, Reply, NewModState} ->
                     Pid ! {Ref, Reply},
                     loop(State#state{mod_state=NewModState});
@@ -319,7 +319,7 @@ loop(#state{mod=Mod, mod_state=ModState} = State) ->
                 _ ->
                     do_terminate(State, {error, unexpected_reply}, ModState)
             end;
-        {'$cast', Request} ->
+        {'$gen_cast', Request} ->
             case Mod:handle_cast(Request, ModState) of
                 {noreply, NewModState} ->
                     loop(State#state{mod_state=NewModState});

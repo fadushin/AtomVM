@@ -60,6 +60,19 @@ flush() ->
 -spec flush(pid()) -> ok.
 flush(Console) ->
     call(Console, flush).
+    
+%%-----------------------------------------------------------------------------
+%% @param   String the string data to write to the console
+%% @returns ok if the data was written, or {error, Reason}, if there was
+%%          an error.
+%% @see     erlang:display/1
+%% @doc     Write a string to the console.
+%% @end
+%%-----------------------------------------------------------------------------
+-spec print(string()) -> ok | error.
+print(_String) ->
+    throw(nif_error).
+
 
 %%-----------------------------------------------------------------------------
 %% @param   String the string data to write to the console

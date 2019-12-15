@@ -106,6 +106,12 @@ Context *scheduler_next(GlobalContext *global, Context *c)
             return next_context;
         }
     }
+    MUTABLE_LIST_FOR_EACH(item, tmp, &global->waiting_processes) {
+        Context *next_context = GET_LIST_ENTRY(item, Context, processes_list_head);
+        if (!next_context->native_handler && (next_context != c)) {
+            return next_context;
+        }
+    }
 
     return c;
 }

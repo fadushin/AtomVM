@@ -135,6 +135,7 @@ int globalcontext_get_registered_process(GlobalContext *glb, int atom_index);
  * @brief equivalent to globalcontext_insert_atom_maybe_copy(glb, atom_string, 0);
  */
 int globalcontext_insert_atom(GlobalContext *glb, AtomString atom_string);
+int globalcontext_insert_atom_maybe_copy(GlobalContext *glb, AtomString atom_string, int copy);
 
 /**
 * @brief Inserts an atom into the global atoms table, making a copy of the supplied atom

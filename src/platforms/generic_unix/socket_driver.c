@@ -44,7 +44,7 @@
 // #define ENABLE_TRACE
 #include "trace.h"
 
-#define BUFSIZE 128
+#define BUFSIZE 512
 
 typedef struct SocketDriverData
 {
@@ -278,7 +278,7 @@ static term do_listen(SocketDriverData *socket_data, Context *ctx, term params)
         return OK_ATOM;
     }
 }
-
+#include <netinet/tcp.h>
 static term init_server_tcp_socket(Context *ctx, SocketDriverData *socket_data, term params)
 {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -286,7 +286,13 @@ static term init_server_tcp_socket(Context *ctx, SocketDriverData *socket_data, 
         return port_create_sys_error_tuple(ctx, SOCKET_ATOM, errno);
     }
     socket_data->sockfd = sockfd;
-
+    int flag = 1;
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &flag, sizeof(int));
+    struct linger sl;
+    sl.l_onoff = 1;
+    sl.l_linger = 0;
+    setsockopt(sockfd, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));
+    setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
     if (fcntl(socket_data->sockfd, F_SETFL, O_NONBLOCK) == -1) {
         close(sockfd);
         return port_create_sys_error_tuple(ctx, FCNTL_ATOM, errno);
