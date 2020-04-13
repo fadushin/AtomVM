@@ -31,6 +31,7 @@
 #include <nvs.h>
 #include <nvs_flash.h>
 #include <rom/md5_hash.h>
+#include <soc/soc.h>
 
 //#define ENABLE_TRACE
 #include "trace.h"
@@ -64,6 +65,8 @@ static const char *const esp_rst_sdio           = "\xC"  "esp_rst_sdio";
 //                                                        123456789ABCDEF01
 
 static int write_atom_c_string(Context *ctx, char *buf, size_t bufsize, term t);
+
+const struct Nif *ledc_nifs_get_nif(const char *nifname);
 
 //
 // NIFs
@@ -346,6 +349,14 @@ static term nif_esp_nvs_reformat(Context *ctx, int argc, term argv[])
     }
 }
 
+static term nif_esp_freq_hz(Context *ctx, int argc, term argv[])
+{
+    UNUSED(argc);
+    UNUSED(argv);
+
+    return term_from_int(APB_CLK_FREQ);
+}
+
 static term nif_rom_md5(Context *ctx, int argc, term argv[])
 {
     UNUSED(argc);
@@ -417,6 +428,11 @@ static const struct Nif esp_nvs_reformat_nif =
     .base.type = NIFFunctionType,
     .nif_ptr = nif_esp_nvs_reformat
 };
+static const struct Nif esp_freq_hz_nif =
+{
+    .base.type = NIFFunctionType,
+    .nif_ptr = nif_esp_freq_hz
+};
 static const struct Nif rom_md5_nif =
 {
     .base.type = NIFFunctionType,
@@ -466,6 +482,10 @@ const struct Nif *platform_nifs_get_nif(const char *nifname)
         TRACE("Resolved platform nif %s ...\n", nifname);
         return &esp_nvs_reformat_nif;
     }
+    if (strcmp("esp:freq_hz/0", nifname) == 0) {
+        TRACE("Resolved platform nif %s ...\n", nifname);
+        return &esp_freq_hz_nif;
+    }
     if (strcmp("erlang:md5/1", nifname) == 0) {
         TRACE("Resolved platform nif %s ...\n", nifname);
         return &rom_md5_nif;
@@ -474,7 +494,7 @@ const struct Nif *platform_nifs_get_nif(const char *nifname)
         TRACE("Resolved platform nif %s ...\n", nifname);
         return &atomvm_platform_nif;
     }
-    return NULL;
+    return ledc_nifs_get_nif(nifname);
 }
 
 //
