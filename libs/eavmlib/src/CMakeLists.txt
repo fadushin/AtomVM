@@ -15,6 +15,7 @@ set(ERLANG_MODULES
     http_server
     json_encoder
     ledc
+    ledc_pwm
     logger
     network_fsm
     spi

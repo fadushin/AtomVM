@@ -26,7 +26,13 @@
 %%-----------------------------------------------------------------------------
 -module(lists).
 
--export([map/2, nth/2, member/2, delete/2, reverse/1, foreach/2, keydelete/3, keyfind/3, keymember/3, foldl/3, foldr/3, all/2, any/2, flatten/1]).
+-export([
+    map/2, nth/2, member/2, delete/2, reverse/1, foreach/2,
+    keydelete/3, keyfind/3, keymember/3,
+    foldl/3, foldr/3,
+    all/2, any/2, flatten/1,
+    search/2
+]).
 
 %%-----------------------------------------------------------------------------
 %% @param   Fun the function to apply
@@ -282,3 +288,22 @@ flatten([H|T], Accum) ->
     FlattenedT = flatten(T, Accum),
     [H|FlattenedT].
 %% post: return is flattened
+
+%%-----------------------------------------------------------------------------
+%% @param   Pred the predicate to apply to elements in List
+%% @param   List search
+%% @returns teh first {value, Val}, if Pred(Val); false, otherwise.
+%% @doc     If there is a Value in List such that Pred(Value) returns true,
+%%          returns {value, Value} for the first such Value, otherwise returns false.
+%% @end
+%%-----------------------------------------------------------------------------
+-spec search(Pred::fun((Elem::term()) -> boolean()), List::list()) -> {value, Value::term()} | false.
+search(_Pred, []) ->
+    false;
+search(Pred, [H|T]) ->
+    case Pred(H) of
+        true ->
+            {value, H};
+        _ ->
+            search(Pred, T)
+    end.
