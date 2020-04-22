@@ -67,6 +67,7 @@ static const char *const esp_rst_sdio           = "\xC"  "esp_rst_sdio";
 static int write_atom_c_string(Context *ctx, char *buf, size_t bufsize, term t);
 
 const struct Nif *ledc_nifs_get_nif(const char *nifname);
+const struct Nif *dht_nifs_get_nif(const char *nifname);
 
 //
 // NIFs
@@ -494,7 +495,16 @@ const struct Nif *platform_nifs_get_nif(const char *nifname)
         TRACE("Resolved platform nif %s ...\n", nifname);
         return &atomvm_platform_nif;
     }
-    return ledc_nifs_get_nif(nifname);
+    const struct Nif *nif = NULL;
+    nif = ledc_nifs_get_nif(nifname);
+    if (nif != NULL) {
+        return nif;
+    }
+    nif = dht_nifs_get_nif(nifname);
+    if (nif != NULL) {
+        return nif;
+    }
+    return NULL;
 }
 
 //
