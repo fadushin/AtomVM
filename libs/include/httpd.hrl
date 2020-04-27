@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   Copyright 2019 by Fred Dushin <fred@dushin.net>                       %
+%   Copyright 2020 by Fred Dushin <fred@dushin.net>                       %
 %                                                                         %
 %   This program is free software; you can redistribute it and/or modify  %
 %   it under the terms of the GNU Lesser General Public License as        %
@@ -17,11 +17,7 @@
 %   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA .        %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--define(LOG_INFO(Format, Args),      avm_logger:log({?MODULE, ?FUNCTION_NAME, ?FUNCTION_ARITY, ?LINE}, info,     {Format, Args})).
--define(LOG_WARNING(Format, Args),   avm_logger:log({?MODULE, ?FUNCTION_NAME, ?FUNCTION_ARITY, ?LINE}, warning,  {Format, Args})).
--define(LOG_ERROR(Format, Args),     avm_logger:log({?MODULE, ?FUNCTION_NAME, ?FUNCTION_ARITY, ?LINE}, error,    {Format, Args})).
--define(LOG_DEBUG(Format, Args),     avm_logger:log({?MODULE, ?FUNCTION_NAME, ?FUNCTION_ARITY, ?LINE}, debug,    {Format, Args})).
-% -define(LOG_INFO(Format, Args),      io:format("~p:~p/~p:~p [~p] ~s~n", [?MODULE, ?FUNCTION_NAME, ?FUNCTION_ARITY, ?LINE, info, io_lib:format(Format, Args)])).
-% -define(LOG_WARNING(Format, Args),   io:format("~p:~p/~p:~p [~p] ~s~n", [?MODULE, ?FUNCTION_NAME, ?FUNCTION_ARITY, ?LINE, warning, io_lib:format(Format, Args)])).
-% -define(LOG_ERROR(Format, Args),     io:format("~p:~p/~p:~p [~p] ~s~n", [?MODULE, ?FUNCTION_NAME, ?FUNCTION_ARITY, ?LINE, error, io_lib:format(Format, Args)])).
-% -define(LOG_DEBUG(Format, Args),     io:format("~p:~p/~p:~p [~p] ~s~n", [?MODULE, ?FUNCTION_NAME, ?FUNCTION_ARITY, ?LINE, debug, io_lib:format(Format, Args)])).
+-define(INTERNAL_SERVER_ERROR, 500).
+-define(BAD_REQUEST, 400).
+-define(NOT_FOUND, 404).
+-define(OK, 200).

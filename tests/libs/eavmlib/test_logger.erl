@@ -7,7 +7,7 @@
 
 test() ->
     start_counter(),
-    logger:start([{sinks, [{?MODULE, do_log}]}]),
+    avm_logger:start([{sinks, [{?MODULE, do_log}]}]),
 
     ?ASSERT_MATCH(get_counter(info), 0),
     ?ASSERT_MATCH(get_counter(warning), 0),
@@ -38,7 +38,7 @@ test() ->
     ?ASSERT_MATCH(get_counter(error), 1),
     ?ASSERT_MATCH(get_counter(debug), 0),
 
-    logger:set_levels([debug, info]),
+    avm_logger:set_levels([debug, info]),
     ok = ?LOG_INFO("Another info ~p", [info]),
     ok = ?LOG_WARNING("Another warning ~p", [warning]),
     ok = ?LOG_ERROR("Another error ~p", [error]),
@@ -48,7 +48,7 @@ test() ->
     ?ASSERT_MATCH(get_counter(error), 1),
     ?ASSERT_MATCH(get_counter(debug), 1),
 
-    % logger:set_sinks([{logger, console_log}]),
+    % avm_logger:set_sinks([{logger, console_log}]),
     % ok = ?LOG_INFO("Some sample ~p logging to print to the console.", [info]),
 
     ok.

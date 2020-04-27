@@ -6,7 +6,8 @@ start() ->
     case gen_tcp:listen(44404, []) of
         {ok, ListenSocket} ->
             io:format("Listening on ~p.~n", [local_address(ListenSocket)]),
-            spawn(fun() -> accept(ListenSocket) end);
+            spawn(fun() -> accept(ListenSocket) end),
+            sleep_forever();
         Error ->
             io:format("An error occurred listening: ~p~n", [Error])
     end.
@@ -42,3 +43,8 @@ peer_address(Socket) ->
 
 to_string({{A,B,C,D}, Port}) ->
     io_lib:format("~p.~p.~p.~p:~p", [A,B,C,D, Port]).
+
+
+sleep_forever() ->
+    timer:sleep(10000),
+    sleep_forever().

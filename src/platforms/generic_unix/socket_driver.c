@@ -44,7 +44,7 @@
 // #define ENABLE_TRACE
 #include "trace.h"
 
-#define BUFSIZE 128
+#define BUFSIZE 512
 
 typedef struct SocketDriverData
 {
@@ -278,7 +278,7 @@ static term do_listen(SocketDriverData *socket_data, Context *ctx, term params)
         return OK_ATOM;
     }
 }
-
+#include <netinet/tcp.h>
 static term init_server_tcp_socket(Context *ctx, SocketDriverData *socket_data, term params)
 {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -286,7 +286,13 @@ static term init_server_tcp_socket(Context *ctx, SocketDriverData *socket_data, 
         return port_create_sys_error_tuple(ctx, SOCKET_ATOM, errno);
     }
     socket_data->sockfd = sockfd;
-
+    int flag = 1;
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &flag, sizeof(int));
+    struct linger sl;
+    sl.l_onoff = 1;
+    sl.l_linger = 0;
+    setsockopt(sockfd, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));
+    setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
     if (fcntl(socket_data->sockfd, F_SETFL, O_NONBLOCK) == -1) {
         close(sockfd);
         return port_create_sys_error_tuple(ctx, FCNTL_ATOM, errno);
@@ -440,15 +446,20 @@ term socket_driver_sockname(Context *ctx)
         port_ensure_available(ctx, 3);
         return port_create_error_tuple(ctx, term_from_int(errno));
     } else {
-        port_ensure_available(ctx, 8);
+        port_ensure_available(ctx, 11);
         term addr_term = socket_tuple_from_addr(
             ctx, ntohl(addr.sin_addr.s_addr)
         );
         term port_term = term_from_int(ntohs(addr.sin_port));
-        return port_create_tuple2(
+        term addr_port = port_create_tuple2(
             ctx,
             addr_term,
             port_term
+        );
+        return port_create_tuple2(
+            ctx,
+            OK_ATOM,
+            addr_port
         );
     }
 }
@@ -464,15 +475,20 @@ term socket_driver_peername(Context *ctx)
         port_ensure_available(ctx, 3);
         return port_create_error_tuple(ctx, term_from_int(errno));
     } else {
-        port_ensure_available(ctx, 8);
+        port_ensure_available(ctx, 11);
         term addr_term = socket_tuple_from_addr(
             ctx, ntohl(addr.sin_addr.s_addr)
         );
         term port_term = term_from_int(ntohs(addr.sin_port));
-        return port_create_tuple2(
+        term addr_port = port_create_tuple2(
             ctx,
             addr_term,
             port_term
+        );
+        return port_create_tuple2(
+            ctx,
+            OK_ATOM,
+            addr_port
         );
     }
 }
@@ -648,9 +664,12 @@ static void passive_recv_callback(EventListener *listener)
     } else {
         TRACE("socket_driver: passive received data of len: %li\n", len);
         int ensure_packet_avail;
+        int binary;
         if (socket_data->binary == TRUE_ATOM) {
+            binary = 1;
             ensure_packet_avail = term_binary_data_size_in_terms(len) + BINARY_HEADER_SIZE;
         } else {
+            binary = 0;
             ensure_packet_avail = len * 2;
         }
         port_ensure_available(ctx, 20 + ensure_packet_avail);
@@ -698,9 +717,12 @@ static void active_recvfrom_callback(EventListener *listener)
         port_send_message(ctx, pid, msg);
     } else {
         int ensure_packet_avail;
+        int binary;
         if (socket_data->binary == TRUE_ATOM) {
+            binary = 1;
             ensure_packet_avail = term_binary_data_size_in_terms(len) + BINARY_HEADER_SIZE;
         } else {
+            binary = 0;
             ensure_packet_avail = len * 2;
         }
         // {udp, pid, {int,int,int,int}, int, binary}
@@ -748,9 +770,12 @@ static void passive_recvfrom_callback(EventListener *listener)
         port_send_reply(ctx, pid, ref, port_create_sys_error_tuple(ctx, RECVFROM_ATOM, errno));
     } else {
         int ensure_packet_avail;
+        int binary;
         if (socket_data->binary == TRUE_ATOM) {
+            binary = 1;
             ensure_packet_avail = term_binary_data_size_in_terms(len) + BINARY_HEADER_SIZE;
         } else {
+            binary = 0;
             ensure_packet_avail = len * 2;
         }
         // {Ref, {ok, {{int,int,int,int}, int, binary}}}
@@ -775,8 +800,6 @@ static void passive_recvfrom_callback(EventListener *listener)
 
 static void do_recv(Context *ctx, term pid, term ref, term length, term timeout, event_handler_t handler)
 {
-    UNUSED(timeout);
-
     GlobalContext *glb = ctx->global;
     struct GenericUnixPlatformData *platform = glb->platform_data;
 
@@ -868,8 +891,6 @@ static void accept_callback(EventListener *listener)
 
 void socket_driver_do_accept(Context *ctx, term pid, term ref, term timeout)
 {
-    UNUSED(timeout);
-
     GlobalContext *glb = ctx->global;
     struct GenericUnixPlatformData *platform = glb->platform_data;
 

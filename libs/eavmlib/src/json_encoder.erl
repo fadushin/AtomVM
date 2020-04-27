@@ -48,7 +48,19 @@ encode(Value) when is_integer(Value) ->
     erlang:integer_to_binary(Value);
 
 encode(V) ->
-    encode(V, []).
+    case is_printable(V) of
+        true ->
+            encode(erlang:list_to_binary(V));
+        _ ->
+        encode(V, [])
+    end.
+
+is_printable([]) ->
+    true;
+is_printable([H|T]) when is_integer(H) andalso H > 22 andalso H < 127 ->
+    is_printable(T);
+is_printable(_) ->
+    false.
 
 encode([{_K, _V} | _T] = L, []) ->
     encode(L, ${);

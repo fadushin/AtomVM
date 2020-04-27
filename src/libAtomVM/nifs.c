@@ -128,6 +128,7 @@ static term nif_erlang_pid_to_list(Context *ctx, int argc, term argv[]);
 static term nif_erlang_ref_to_list(Context *ctx, int argc, term argv[]);
 static term nif_erlang_fun_to_list(Context *ctx, int argc, term argv[]);
 static term nif_atomvm_read_priv(Context *ctx, int argc, term argv[]);
+static term nif_console_print(Context *ctx, int argc, term argv[]);
 
 static const struct Nif binary_at_nif =
 {
@@ -469,6 +470,11 @@ static const struct Nif atomvm_read_priv_nif =
 {
     .base.type = NIFFunctionType,
     .nif_ptr = nif_atomvm_read_priv
+};
+static const struct Nif console_print_nif =
+{
+    .base.type = NIFFunctionType,
+    .nif_ptr = nif_console_print
 };
 
 //Ignore warning caused by gperf generated code
@@ -2428,4 +2434,24 @@ static term nif_atomvm_read_priv(Context *ctx, int argc, term argv[])
         free(complete_path);
         return UNDEFINED_ATOM;
     }
+}
+
+static term nif_console_print(Context *ctx, int argc, term argv[])
+{
+    UNUSED(argc);
+    
+    term t = argv[0];
+    VALIDATE_VALUE(t, term_is_string);
+    
+    int ok;
+    char *str = interop_term_to_string(t, &ok);
+    if (UNLIKELY(!ok)) {
+        return ERROR_ATOM;
+    } else {
+        printf("%s", str);
+        fflush(stdout);
+    }
+    free(str);
+    
+    return OK_ATOM;
 }

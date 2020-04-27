@@ -8,18 +8,22 @@ include(BuildErlang)
 
 set(ERLANG_MODULES
     atomvm
+    avm_logger
+    avm_util
     console
     esp
     dht
     gpio
+    httpd
+    api_handler
     i2c
     http_server
     json_encoder
     ledc
     ledc_pwm
-    logger
     network_fsm
     spi
+    system_info_api_handler
     timer_manager
     timestamp_util
     uart

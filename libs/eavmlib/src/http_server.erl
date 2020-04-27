@@ -46,17 +46,22 @@ loop(Router, OldStateAndData) ->
         {tcp_closed, _Socket} ->
             ok;
         {tcp, Socket, Packet} ->
+            io:format("Received request from ~p~n", [inet:peername(Socket)]),
             case parse_http(Packet, OldStateAndData) of
                 {got_request, RequestData} ->
                     Conn = [{socket, Socket} | RequestData],
                     Method = proplists:get_value(method, Conn),
                     PathTokens = proplists:get_value(uri, Conn),
                     {ok, Module} = find_route(Method, PathTokens, Router),
-                    {ok, _UpdatedConn} = Module:handle_req(Method, split(PathTokens), Conn),
+                    SplitTokens = split(PathTokens),
+                    {ok, _UpdatedConn} = Module:handle_req(Method, SplitTokens, Conn),
                     ok;
 
                 {need_more, StateAndData} ->
-                    loop(Router, StateAndData)
+                    loop(Router, StateAndData);
+                Error ->
+                    io:format("Error parsing request: ~p~n", [Error]),
+                    ok
             end
     end.
 

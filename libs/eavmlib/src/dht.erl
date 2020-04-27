@@ -196,8 +196,8 @@ do_calibrate(Pin, Device, LastMeasurement) ->
     maybe_sleep(Device, LastMeasurement),
     {erlang:timestamp(), dht:get_calibration(Pin)}.
 
-get_measurement(Measurement, dht11) ->
-    Measurement;
+get_measurement({A, B, C, D}, dht11) ->
+    {C, D, A, B};
 get_measurement({A, B, C, D}, dht22) ->
     H = (A bsl 8) bor B,
     F = case C band 16#80 of 0 -> 1; 16#80 -> -1 end,

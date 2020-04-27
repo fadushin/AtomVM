@@ -21,6 +21,7 @@ add_subdirectory(tools/packbeam)
 if (NOT "${CMAKE_GENERATOR}" MATCHES "Xcode")
     add_subdirectory(libs)
     add_subdirectory(examples)
+    add_subdirectory(demo)
     add_subdirectory(doc)
 endif()
 

@@ -26,7 +26,7 @@
 %% to do logging.
 %% @end
 %%-----------------------------------------------------------------------------
--module(logger).
+-module(avm_logger).
 
 -export([
     start/0, start/1, log/3,
@@ -225,13 +225,20 @@ console_log(Request) ->
 
 make_timestamp(Timestamp) ->
     {{Year, Month, Day}, {Hour, Minute, Second}} = Timestamp,
-    io_lib:format("~p:~p:~pT~p:~p:~p", [
-        Year, Month, Day, Hour, Minute, Second
+    io_lib:format("~p-~s-~sT~s:~s:~s.000", [
+        Year, maybe_pad(Month), maybe_pad(Day),
+        maybe_pad(Hour), maybe_pad(Minute), maybe_pad(Second)
     ]).
+
+%% @private
+maybe_pad(I) when 0 =< I andalso I < 10 ->
+    [$0|integer_to_list(I)];
+maybe_pad(I) ->
+    integer_to_list(I).
 
 make_location(Location) ->
     {Module, Function, Arity, Line} = Location,
-    io_lib:format("~p:~p/~p:~p", [
+    io_lib:format("[~p:~p/~p:~p]", [
         Module, Function, Arity, Line
     ]).
 
@@ -311,10 +318,10 @@ do_log_sink({Module, Function} = _Sink, Request, Level, Levels) ->
             try
                 Module:Function(Request)
             catch
-                _:_ ->
+                _:Error ->
                     io:format(
-                        "An error occurred attempting to log to sink ~p:~p/1.  request=~p~n",
-                        [Module, Function, Request]
+                        "An error occurred attempting to log to sink ~p:~p/1.  E=~p request=~p~n",
+                        [Module, Function, Error, Request]
                     )
             end;
         _ ->

@@ -26,7 +26,8 @@ tcp_server_start() ->
             io:format("Listening on ~p.~n", [local_address(ListenSocket)]),
             Gpio = gpio:open(),
             gpio:set_direction(Gpio, ?PIN, output),
-            spawn(fun() -> accept(ListenSocket, Gpio) end);
+            spawn(fun() -> accept(ListenSocket, Gpio) end),
+            sleep_forever();
         Error ->
             io:format("An error occurred listening: ~p~n", [Error])
     end.
@@ -65,3 +66,7 @@ to_string({{A,B,C,D}, Port}) ->
     io_lib:format("~p.~p.~p.~p:~p", [A,B,C,D, Port]);
 to_string({A,B,C,D}) ->
     io_lib:format("~p.~p.~p.~p", [A,B,C,D]).
+
+sleep_forever() ->
+    timer:sleep(10000),
+    sleep_forever().

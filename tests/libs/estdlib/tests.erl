@@ -5,6 +5,7 @@
 start() ->
     etest:test([
         test_lists
+        , test_string
         , test_gen_server
         , test_gen_statem
         , test_gen_udp

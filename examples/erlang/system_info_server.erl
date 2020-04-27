@@ -3,39 +3,43 @@
 -export([start/0, handle_req/3]).
 
 start() ->
-    Self = self(),
-    Config = [
-        {sta, [
-            {ssid, "SSID"},
-            {psk,  "PSK"},
-            {connected, fun() -> Self ! connected end},
-            {got_ip, fun(IpInfo) -> Self ! {ok, IpInfo} end},
-            {disconnected, fun() -> Self ! disconnected end}
-        ]}
+        case atomvm:platform() of
+        esp32 ->
+            start_wifi();
+        _ -> ok
+    end,
+    run().
+
+%% @private
+start_wifi() ->
+    Creds = [
+        {ssid, esp:nvs_get_binary(atomvm, sta_ssid, <<"myssid">>)},
+        {psk,  esp:nvs_get_binary(atomvm, sta_psk, <<"mypsk">>)}
     ],
-    case network_fsm:start(Config) of
-        ok ->
-            wait_for_message();
+    case network_fsm:wait_for_sta(Creds, 30000) of
+        {ok, {Address, Netmask, Gateway}} ->
+            io:format(
+                "Acquired IP address: ~p Netmask: ~p Gateway: ~p~n",
+                [Address, Netmask, Gateway]
+            );
         Error ->
             io:format("An error occurred starting network: ~p~n", [Error])
     end.
 
-wait_for_message() ->
+%% @private
+run() ->
     Router = [
         {"*", ?MODULE, []}
     ],
-    receive
-        connected ->
-            io:format("Connected~n");
-        {ok, IpInfo} ->
-            io:format("Acquired IP address: ~p~n", [IpInfo]),
-            http_server:start_server(8080, Router);
-        disconnected ->
-            io:format("Disonnected~n")
-    after 15000 ->
-        ok
-    end,
-    wait_for_message().
+    io:format("Starting http server on port 8080...~n"),
+    case http_server:start_server(8080, Router) of
+        Pid when is_pid(Pid) ->
+            io:format("HTTP server started.~n"),
+            sleep_forever();
+        Error ->
+            io:format("An error occurred: ~p~n", [Error])
+
+    end.
 
 handle_req("GET", [], Conn) ->
     TimeString = universaltime_to_bin(erlang:universaltime()),
@@ -48,9 +52,15 @@ handle_req("GET", ["system", "info"], Conn) ->
         {process_count, erlang:system_info(process_count)},
         {port_count, erlang:system_info(port_count)},
         {word_size, erlang:system_info(wordsize)},
-        {system_architecture, erlang:system_info(system_architecture)}
+        {platform, atomvm:platform()},
+        {heap_free, erlang:system_info(esp32_free_heap_size)}
     ],
     Body = json_encoder:encode(SysInfo),
+    http_server:reply(200, Body, Conn);
+
+handle_req("GET", ["processes"], Conn) ->
+    Procs = lists:reverse(erlang:processes()),
+    Body = json_encoder:encode([io_lib:format("~p", [Proc]) || Proc <- Procs]),
     http_server:reply(200, Body, Conn);
 
 handle_req("GET", ["processes", PidString, "info"], Conn) ->
@@ -82,12 +92,25 @@ try_proc_info_list(PidString) ->
 
 proc_info_list(PidString) ->
     PidInteger = erlang:list_to_integer(PidString),
-    Procs = erlang:processes(),
+    Procs = lists:reverse(erlang:processes()),
     Pid = lists:nth(PidInteger, Procs),
     io:format("pid: ~p~n", [Pid]),
     [
+        {pid, io_lib:format("~p", [Pid])},
         erlang:process_info(Pid, heap_size),
         erlang:process_info(Pid, stack_size),
         erlang:process_info(Pid, message_queue_len),
         erlang:process_info(Pid, memory)
     ].
+
+% sys_info(esp32) ->
+%     [
+%         {esp32_free_heap_size, erlang:system_info(esp32_free_heap_size)},
+%         {esp32_chip_info, erlang:system_info(esp32_chip_info)},
+%         {esp_idf_version, erlang:system_info(esp_idf_version)}
+%     ];
+% sys_info(_) -> [].
+
+sleep_forever() ->
+    timer:sleep(10000),
+    sleep_forever().
