@@ -1,163 +1,46 @@
 # AtomVM {#mainpage}
 
-The `AtomVM` project provides a ground-up implementation of the "Bogdan Erlang Abstract Machine" (BEAM), the underlying runtime for the Erlang and Elixer (among other) BEAM-targeted programming environments.  `AtomVM` is intended to execute Erlang or Elixer programs that have ben compiled down to the BEAM instruction set.
+Welcome to AtomVM, the Erlang virtual machine for IoT devices!
 
-While `AtomVM` can be compiled for and run on destop (UNIX-like) systems, the intended target for AtomVM are tiny microcontrollers, such as the ESP32 and STM32.
+AtomVM is designed to allow developers to implement applications in the Erlang and Elixir (among other) programming languages, and to deploy those applications onto tiny devices.  Currently, AtomVM supports the [Espressif](https://www.espressif.com) [ESP32](https://www.espressif.com/en/products/socs/esp32) micro-controller, as well as the [ST Microelectronics](https://www.st.com/content/st_com/en.html) [STM32](https://www.st.com/en/microcontrollers-microprocessors/stm32-32-bit-arm-cortex-mcus.html).  Users may also target their applications for fully-fledged operating systems (Linux, FreeBSD, MacOS), though in most cases deployment to traditional computers is done for development and testing purposes, only.
 
-Currently, AtomVM implements a strict subset of the BEAM instruction set, as of Erlang/OTP R20.  Previous and later versions of Erlang/OTP are not supported.
+AtomVM implements the "Bogdan Erlang Abstract Machine" (hereafter, the BEAM), the underlying runtime for the Erlang and Elixir (among other) BEAM-targeted programming environments.  As an implementation of the BEAM, AtomVM supports lightweight "processes", with message passing as the mechanism for inter-(erlang)process communication, pre-emptive multi-tasking, and per-process heap allocation and garbage collection.  As such, AtomVM provides a modern, memory managed, and concurrency-oriented environment for developing applications on small devices.
 
-The currently unsupported Erlang/OTP and BEAM features includes (but is not limited to):
+> Note.  While the BEAM is a mature and fully featured collection of software, it is worth noting that there is no general specification for the VM.  In most cases, the current implementation is the definitive specification of VM behavior, and AtomVM follows the implementation of the BEAM, insofar as possible.
 
-* Anonymous Functions
-* Maps
-* Nummerous BIFs and NIFs supported by the R20 BEAM
-* Numerous ports and drivers supported by the R20 BEAM
-* The Erlang/OTP standard libraries (kernel, stdlib, sasl, etc)
-* `epmd` and the `disterl` protocol
+AtomVM is designed to run unmodified `.beam` files that have been produced by the Erlang and Elixir development tool chains (`erlc`, `rebar`, `mix`, etc).  Developers can therefore make use of the tools they are used to for Erlang and Elixir development, and use AtomVM tooling to deploy those applications to various micro-controllers.
 
-As such, it is highly unlikely that an existing Erlang program targeted for Erlang/OTP R20 will run unmodified on AtomVM.  And indeed, even as AtomVM matures and additional features are added, it is more likley than not that Erlang applications will need to be ported or completely re-written to run on AtomVM.  The intended target environment (small, cheap micro-controllers) differs enough from desktop or server-class systems that special care and attention is needed to target applications for such embedded environments.
+AtomVM provides a strict subset of functionality of the BEAM.  Part of this is because AtomVM is under active development.  A more important reason, however, is that the environments on which AtomVM applications are deployed are significantly more constrained than typical BEAM environments.  For example, most micro-controller environments do not support native POSIX APIs for interfacing with an operating system, and in many cases, common operating system abstractions, such as processes, threads, or files, are simply unavailable.  AtomVM, therefore, aims to provide a subset of functionality that is appropriate for deployment to environments on which it is deployed.
 
-That being said, many of the features of the BEAM are supported and provide a rich and compelling development environment for embedded devices, which Erlang and Elixer developers will find natural and productive.
+However, because the BEAM is a pre-emptive multitasking environment for your code, many of the common operating system abstractions, particularly around concurrency, are simply not needed.  You can write your Erlang or Elixir code as you ordinarily would for a multi-core system architecture, and AtomVM will run your code, accordingly.  This makes writing concurrent code for micro-controllers (e.g., and application that reads sensor data, services HTTP requests, and updates the system clock, all at the same time) incredibly simple and natural.  Many programming environments struggle to provide such features without extreme contortions to the language.
 
+In addition, AtomVM provides interfaces for integrating with features commonly seen on micro-controllers, such as GPIO pins, analog-to-digital conversion, and common industry peripheral interfaces, such as I2C, SPI, and UART, making AtomVM a serious contender for developing rich IoT applications.
 
-## Design Philosophy
+Finally, one of the exciting aspects about modern micro-controllers, such as the ESP32, is their integration with modern networking technologies, such as WiFi and Bluetooth.  AtomVM takes advantage of these integrations on the platforms on which they are offered, opening up further possibilities for developing networked and wireless IoT devices.
 
-AtomVM is designed to make use of the existing toolchain from the Erlang and Elixer ecosystems.  This includes the Erlang and Elixer compilers, which will compile Erlang and Eliver source code to BEAM bytecode, but as AtomVM matures, will also include using Erlang and Elixer tools for managing software that runs on devices, such as (in the future) the `disterl` protocol.  Where possible, AtomVM makes use of existing tool chains to reduce the amount of unecessary features in AtomVM, thus reducing complexity, as well as the amount of system resources in use by the runtime.  AtiomVM is designed to be as small and lean as possible, providing as many resources to user applications, as possible.
+We think you will agree that AtomVM provides a compelling environment not only for Erlang and Elixir development, but also as a home for complex and interesting IoT projects.
 
-AtomVM is designed from the start to run on small, cheap embedded devices, where system resources (memory, cpu, storage) are tightly constrained.  The smallest environment in which AtomVM runs has around 256k of addressable RAM, some of which is used by the underlying runtime (FreeRTOS), and some of which is used by the AtomVM system, itself, leaving even less RAM for your own applications.
+# Design Philosophy
 
-TODO details about memory model
+AtomVM is designed from the start to run on small, cheap embedded devices, where system resources (memory, cpu, storage) are tightly constrained.  The smallest environment in which AtomVM runs has around 256k of addressable RAM, some of which is used by the underlying runtime (FreeRTOS), and some of which is used by the AtomVM virtual machine, itself, leaving even less RAM for your own applications.  Where there is a tradeoff between memory consumption and performance, minimizing memory consumption (and heap fragmentation) always wins.
 
-## Licensing
+From the developer's point of view, AtomVM is designed to make use of the existing tool chain from the Erlang and Elixir ecosystems.  This includes the Erlang and Elixir compilers, which will compile Erlang and Elixir source code to BEAM bytecode.  Where possible, AtomVM makes use of existing tool chains to reduce the amount of unnecessary features in AtomVM, thus reducing complexity, as well as the amount of system resources in use by the runtime.  AtomVM is designed to be as small and lean as possible, providing as many resources to user applications, as possible.
 
-AtomVM is licensed under the terms of the LGPLv2 and Apache2 licenses.
+# Licensing
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as
-    published by the Free Software Foundation; either version 2 of the
-    License, or (at your option) any later version.
+AtomVM is licensed under the terms of the [LGPLv2](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html) and [Apache2](https://www.apache.org/licenses/LICENSE-2.0) licenses.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+# Contributing
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the
-    Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA .
+The AtomVM community welcomes contributions tot he AtomVM code base and upstream and downstream projects.  Please see the [contributing guidelines](../CONTRIBUTING.md) for information about how to contribute.
 
-## Building AtomVM
+AtomVM developers can be reached on the #AtomVM discord server.
 
-AtomVM can be built via the command line and can target numerous environments, including Linux, FreeBSD, MacOS, ESP32, and STM32.
+# Getting Started
 
-In the case of embedded devices (ESP32 and STM32), toolchains from open source and third-party vendors are required in order to cross-compile AtomVM source code (most of which is written in the C programming language)
+The following guides provide more detailed information about getting started with the AtomVM virtual machine, how to develop and deploy applications, and implementation information, for anyone interested in getting more involved:
 
-### Downloading AtomVM
-
-At present, AtomVM is only available via a checkout of the AtomVM github repository.
-
-> Note.  Downloading the AtomVM github repository requires the installtion of the `git` program.  Consult your local OS documentation for installtion of the `git` package.
-
-	shell$ git clone https://github.com/bettio/AtomVM
-	TODO
-	shell$ cd AtomVM
-
-
-### Generic Unix
-
-The following instructions apply to unix-like environments, including Linux, FreeBSD, and MacOS.
-
-#### Pre-requisites
-
-The following software is required in order to build AtomVM in generic UNIX systems:
-
-* `gcc` or `llvm` tool chains
-* `cmake`
-* `make`
-* `gperf`
-* `zlib`
-
-Consult your local OS documentation for instructions about how to install these components.
-
-#### Build Instructions
-
-The AtomVM build for generic UNIX systems makes use of the `cmake` tool for generating `make` files from the top level AtomVM directory, as follows:
-
-	shell$ mkdir build
-	shell$ cd build
-	shell$ cmake ..
-	...
-	shell$ make
-
-> Note.  You may optionally specify `-j <n>`, where `<n>` is the number of CPUs you would like to assign to run the build in parallel.
-
-Upon completion, the `AtomVM` execcutable can be found in the `build/src` directory.
-
-#### Special Note for MacOS users
-
-You may build an Apple Xcode project, for developing, testing, and debugging in the Xcode IDE, by specifying the Xcode generator.  For example, from the top level AtomVM directory:
-
-	shell$ mkdir xcode
-	shell$ cmake -G Xcode ..
-	...
-	shell$ open AtomVM.xcodeproj
-
-The above commands will build and open an AtomVM project in the Xcode IDE.
-
-### ESP32
-
-
-
-
-#### Pre-requisites
-
-The following software is required in order to build AtomVM:
-
-* Espressif Xtensa tool chains
-* Espressif IDF toolkit
-* `cmake`
-* GNU `make`
-
-#### Build Instructions
-
-
-
-
-## Targeting AtomVM
-
-
-
-## AtomVM Components
-
-### Bytecode Interpreter
-
-### Scheduler
-
-### Memory Management
-
-#### Garbage Collection
-
-### Code Loading
-
-### BIFs
-
-### NIFs
-
-### Ports
-
-### PackBEAM
-
-## AtomVM Platforms
-
-### Generic Unix
-
-### ESP32
-
-### STM32
-
-### Targeting AtomVM for a new platform
-
-## AtomVM Libraries
-
-## Resources
+* [Getting Started Guide](getting_started_guide.md)
+* [Example Programs](example_programs.md)
+* [Programmers Guide](programmers_guide.md)
+* [Implementors Guide](implementors_guide.md)
